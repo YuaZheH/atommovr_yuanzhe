@@ -1,8 +1,4 @@
-#########################################################################
-# Core utilities for initializing and analyzing atom arrays #
-# Authors: Nikhil Harle, Bo-Yu Chen
-# Date: 2025-03-13
-#########################################################################
+# Core utilities for initializing and analyzing atom arrays 
 
 import copy
 import math
@@ -13,17 +9,9 @@ from enum import IntEnum
 
 from atommover.utils.Move import Move
 
-
-class ArrayGeometry(IntEnum):
-    """ Class that specifies the geometry of the atom array. See references
-        [LattPy](https://lattpy.readthedocs.io/en/latest/)
-    """
-    SQUARE = 0
-    RECTANGULAR = 1 
-    TRIANGULAR = 2 # NOT SUPPORTED YET
-    BRAVAIS = 3 # NOT SUPPORTED YET
-    DECORATED_BRAVAIS = 4 # NOT SUPPORTED YET
-
+###########
+# Classes #
+###########
 
 class Configurations(IntEnum):
     """ Class to be used in conjunction with `AtomArray.generate_target()`
@@ -35,7 +23,6 @@ class Configurations(IntEnum):
     Left_Sweep = 4
     SEPARATE = 5 # for dual-species only
     RANDOM = 6
-
 
 CONFIGURATION_PLOT_LABELS = {Configurations.ZEBRA_HORIZONTAL: 'Horizontal zebra stripes',
                              Configurations.ZEBRA_VERTICAL: 'Vertical zebra stripes',
@@ -75,12 +62,20 @@ class PhysicalParams:
         # tweezer parameters
         self.AOD_speed = AOD_speed
 
-def generate_middle_fifty(length, filling_threshold = 0.5):
-    # TODO this only works for square arrays, generalize to rectangular
-    max_L = length
-    while (max_L**2)/(length**2) >= filling_threshold:
-        max_L -= 1
-    return [max_L , max_L]
+class ArrayGeometry(IntEnum):
+    """ Class that specifies the geometry of the atom array. See references
+        [LattPy](https://lattpy.readthedocs.io/en/latest/)
+    """
+    SQUARE = 0
+    RECTANGULAR = 1 # NOT SUPPORTED YET
+    TRIANGULAR = 2 # NOT SUPPORTED YET
+    BRAVAIS = 3 # NOT SUPPORTED YET
+    DECORATED_BRAVAIS = 4 # NOT SUPPORTED YET
+
+
+#############
+# Functions #
+#############
 
 @jit
 def random_loading(size, probability):
@@ -143,9 +138,7 @@ def generate_random_target_configs(n_shots,targ_occup_prob,max_sys_size):
     return target_config_storage
 
 
-## Various functions ##
-
-def count_atoms_in_columns(matrix): #matrix
+def count_atoms_in_columns(matrix):
     num_columns = len(matrix[0])
 
     # Initialize a list to store the count of atoms in each column
@@ -156,7 +149,7 @@ def count_atoms_in_columns(matrix): #matrix
         for row in matrix:
             column_counts[col] += row[col]
 
-    return column_counts #list
+    return column_counts
 
 def left_right_atom_in_row(row, direction):
     for i in range(len(row))[::-direction]:
@@ -179,9 +172,12 @@ def get_move_distance(from_row, from_col, to_row, to_col, spacing = 5e-6):
 
 def atom_loss(matrix: np.ndarray, move_time: float, lifetime: float = 30) -> tuple[np.ndarray, bool]:
     """ 
-    Given an array of atoms, simulates the process of atom loss over a length of time `move_time`.
-    Specifically, for each atom it calculates the probability (equal to exp(-move_time/lifetime))
-    of a background gas particle colliding with the atom and knocking it out of its trap.
+        Given an array of atoms, simulates the process of atom loss
+        over a length of time `move_time`.
+    
+        Specifically, for each atom it calculates the probability (equal
+        to exp(-move_time/lifetime)) of a background gas particle colliding
+        with the atom and knocking it out of its trap.
     """
     loss_flag = 0
     loss_mask_vals = random_loading(list(np.shape(matrix)), np.exp(-move_time/lifetime))
@@ -196,7 +192,10 @@ def atom_loss(matrix: np.ndarray, move_time: float, lifetime: float = 30) -> tup
     return matrix_copy, loss_flag
 
 def atom_loss_dual(matrix: np.ndarray, move_time: float, lifetime: float = 30) -> tuple[np.ndarray, bool]:
-    """ Given a Numpy array representing a dual-species atom array, simulates the process of atom loss over a length of time `move_time`."""
+    """ 
+        Given a Numpy array representing a dual-species atom array, 
+        simulates the process of atom loss over a length of time `move_time`.
+    """
     loss_flag = 0
     loss_mask = random_loading(list(np.shape(matrix)), np.exp(-move_time/lifetime))
     matrix_copy = copy.deepcopy(matrix)
@@ -217,3 +216,10 @@ def save_frames(temp_frames, combined_frames):
     combined_frames.extend(temp_frames)
     temp_frames.clear()
     return temp_frames, combined_frames
+
+def generate_middle_fifty(length, filling_threshold = 0.5):
+    # TODO this only works for square arrays, generalize to rectangular
+    max_L = length
+    while (max_L**2)/(length**2) >= filling_threshold:
+        max_L -= 1
+    return [max_L , max_L]

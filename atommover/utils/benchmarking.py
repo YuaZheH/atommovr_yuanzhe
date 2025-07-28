@@ -1,8 +1,5 @@
-#########################################################################
-# Contains scripts for running benchmarking rounds and plotting results #
-# Authors: Bo-Yu Chen, Nikhil Harle
-# Date: 2024-11-24
-#########################################################################
+# Object for running benchmarking rounds and saving data
+
 
 import sys
 import copy
@@ -18,35 +15,35 @@ from atommover.utils.move_utils import move_atoms
 from atommover.utils.AtomArray import AtomArray
 from atommover.algorithms.Algorithm_class import Algorithm, get_effective_target_grid
 
-## Sanity check ##
-def evaluate_moves_old(init_config: np.ndarray, move_list: list, params: PhysicalParams):
-    # making reference time
-    t_total = 0
-    N_parallel_moves = 0
-    N_non_parallel_moves = 0
-    matrix = np.array(copy.deepcopy(init_config))
+# ## Sanity check ##
+# def evaluate_moves_old(init_config: np.ndarray, move_list: list, params: PhysicalParams):
+#     # making reference time
+#     t_total = 0
+#     N_parallel_moves = 0
+#     N_non_parallel_moves = 0
+#     matrix = np.array(copy.deepcopy(init_config))
 
-    # iterating through moves and updating matrix
-    for move_ind, move_set in enumerate(move_list):
+#     # iterating through moves and updating matrix
+#     for move_ind, move_set in enumerate(move_list):
 
-        # performing the move
-        matrix, [failed_moves, flags] = move_atoms(matrix, move_set, look_for_flag = True, pickup_fail_rate = params.pickup_fail_rate, putdown_fail_rate = params.putdown_fail_rate)
-        N_parallel_moves += 1
-        N_non_parallel_moves += len(move_set)
+#         # performing the move
+#         matrix, [failed_moves, flags] = move_atoms(matrix, move_set, look_for_flag = True, pickup_fail_rate = params.pickup_fail_rate, putdown_fail_rate = params.putdown_fail_rate)
+#         N_parallel_moves += 1
+#         N_non_parallel_moves += len(move_set)
 
-        # calculating the distance of each move in the set
-        distances = []
-        for move_set_ind, move in enumerate(move_set):
-            distances.append(move.distance)
+#         # calculating the distance of each move in the set
+#         distances = []
+#         for move_set_ind, move in enumerate(move_set):
+#             distances.append(move.distance)
 
-        # calculating the time to complete the move set in parallel
-        t_move = max(distances)*params.spacing/params.AOD_speed
-        t_total += t_move
+#         # calculating the time to complete the move set in parallel
+#         t_move = max(distances)*params.spacing/params.AOD_speed
+#         t_total += t_move
 
-        # simulating atom loss
-        matrix, loss_flag = atom_loss(matrix, t_move, params.lifetime)
+#         # simulating atom loss
+#         matrix, loss_flag = atom_loss(matrix, t_move, params.lifetime)
 
-    return matrix, float(t_total), [N_parallel_moves, N_non_parallel_moves]
+#     return matrix, float(t_total), [N_parallel_moves, N_non_parallel_moves]
 
 def evaluate_moves(array: AtomArray ,move_list: list):
     # making reference time
@@ -67,9 +64,10 @@ def evaluate_moves(array: AtomArray ,move_list: list):
 
     return array, float(t_total), [N_parallel_moves, N_non_parallel_moves]
 
-#To-Do: Histograms of filling fraction
+
 class BenchmarkingFigure():
     """ 
+        NB: this No longer supported.
     Class that specifies plot parameters and figure types to be used in conjunction with the `Benchmarking` class.
     
     NB: this class just specifies what you want to plot, to actually plot you have to pass it to an instance of the 
@@ -472,54 +470,3 @@ class Benchmarking():
             atoms_in_targets.append(int(np.sum(self.tweezer_array.target)))
 
         return float(np.mean(success_flags)), float(np.mean(success_times)), filling_fractions, wrong_places, atoms_in_arrays, atoms_in_targets
-
-        
-
-    def run_old(self, do_ejection: bool = False): 
-        """
-        Run a round of benchmarking according to the parameters passed to the `Benchmarking()` object. 
-        
-        Saves the results in the variable `self.benchmarking_results`.
-        """
-        # Check the input conditions and raise an error if they are not met
-        self._input_error_check()
-
-        # Define the comparison target based on the figure type
-        if self.figure_output.figure_type == "scale":
-            comparison_target = self.algos
-        if self.figure_output.figure_type == "pattern":
-            comparison_target = self.target_configs
-        if self.figure_output.figure_type == "hist":
-            comparison_target = self.algos
-            self.system_size_range = range(list(self.system_size_range)[0], list(self.system_size_range)[0] + 1)
-
-        # Run the benchmarking for each algorithm
-        self.init_config_storage, self.target_config_storage = generate_random_init_target_configs(self.n_shots,self.exp_params.loading_prob, np.max(self.system_size_range),self.target_config)
-
-        for control_variable in comparison_target:
-            for sys_size in self.system_size_range:
-                self.tweezer_array.shape = [sys_size, sys_size]
-                if self.figure_output.figure_type == "scale" or self.figure_output.figure_type == "hist":
-                    success_rate, time, filling_fraction, wrong_places_count, total_atom = self._run_benchmark_round(control_variable, do_ejection = do_ejection)
-                    self.benchmarking_results.append({
-                        "algorithm": control_variable,
-                        "target": self.target_config[0],
-                        "Success rate": success_rate,
-                        "Time": time,
-                        "Filling fraction": filling_fraction,
-                        "Wrong places #": wrong_places_count,
-                        "Total atoms": total_atom
-                    })
-
-                elif self.figure_output.figure_type == "pattern":
-                    success_rate, time, filling_fraction, wrong_places_count, total_atom = self._run_benchmark_round(self.algos[0], do_ejection = True, pattern = control_variable)
-                    # Store the results in the list as a dictionary
-                    self.benchmarking_results.append({
-                        "algorithm": self.algos[0],
-                        "target": control_variable,
-                        "Success rate": success_rate,
-                        "time": time,
-                        "Filling fraction": filling_fraction,
-                        "Wrong places #": wrong_places_count,
-                        "Total atoms": total_atom
-                    })

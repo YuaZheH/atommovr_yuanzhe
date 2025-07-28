@@ -1,3 +1,5 @@
+# Tests for utility functions (in progress)
+
 import numpy as np
 
 from atommover.utils.AtomArray import AtomArray

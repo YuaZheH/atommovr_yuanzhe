@@ -1,3 +1,5 @@
+# Core functions and classes for moving atoms
+
 import random
 import copy
 import numpy as np

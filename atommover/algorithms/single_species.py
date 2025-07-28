@@ -10,11 +10,9 @@ import numpy as np
 
 from atommover.utils.AtomArray import AtomArray
 from atommover.algorithms.Algorithm_class import Algorithm
-from atommover.algorithms.source.Ebadi2021 import parallel_row_col_rearrangement
 from atommover.algorithms.source.balance_compact import balance_and_compact
 from atommover.algorithms.source.bc_new import bcv2
 from atommover.algorithms.source.generalized_balance import generalized_balance
-from atommover.algorithms.source.bluelab import bluelab
 from atommover.algorithms.source.Hungarian_works import parallel_Hungarian_algorithm_works, parallel_LBAP_algorithm_works, Hungarian_algorithm_works
 
 ##########################
@@ -67,45 +65,10 @@ class GeneralizedBalance(Algorithm):
         if atom_array.n_species != 1:
             raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
         return generalized_balance(atom_array.matrix[:,:,0], atom_array.target, do_ejection)
-    
-# Blue lab algorithm (a.k.a. Balance and Compress)
-class Bluelab(Algorithm):
-    """ Implements the algorithm used in the Bernien group's first 
-        [dual-species atom array](https://www.nature.com/articles/s41567-024-02638-2).
-        
-        Supported configurations: `Configurations.MIDDLE_FILL` (TODO check this)."""
-
-    def __repr__(self):
-        return 'BlueLab'
-
-    def get_moves(self, atom_array: AtomArray, do_ejection: bool = False):
-        if atom_array.n_species != 1:
-            raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
-        return bluelab(atom_array.matrix[:,:,0], atom_array.target, do_ejection)
-
 
 ###########################################
 # Existing algorithms from the literature #
 ###########################################
-
-# Parallel Column Rearrangement
-class Ebadi2021(Algorithm):
-    """ Implements the parallel rearrangement protocol as described in 
-        [Nature 595, 227-232 (2021)](https://www.nature.com/articles/s41586-021-03582-4/figures/8).
-
-        Supported configurations: all.
-    """
-
-    def __repr__(self):
-        return 'Ebadi2021'
-
-    def get_moves(self, atom_array: AtomArray, do_ejection: bool = False, max_rearrangement_cycles: int = 50, max_presorting_cycles: int = 20) -> 'tuple[list,np.ndarray,bool]':
-        """ Returns a list of moves to perform rearrangement.
-        args:
-            init_config (np.ndarray) """
-        if atom_array.n_species != 1:
-            raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
-        return parallel_row_col_rearrangement(atom_array.matrix[:,:,0], atom_array.target, max_rearrangement_cycles, max_presorting_cycles, do_ejection)
 
 # Hungarian
 class Hungarian(Algorithm):
@@ -124,21 +87,6 @@ class Hungarian(Algorithm):
         return Hungarian_algorithm_works(atom_array.matrix[:,:,0], atom_array.target, do_ejection)
 
 # Balance and Compact
-class BalanceAndCompact(Algorithm):
-    """Implements the Balance and Compact algorithm, as originally described
-       in [PRA 70, 040302(R) (2004)](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.70.040302)
-       
-       Supported configurations: `Configurations.MIDDLE_FILL`"""
-
-    def __repr__(self):
-        return 'Balance & Compact'
-
-    def get_moves(self, atom_array: AtomArray, do_ejection: bool = False):
-        if atom_array.n_species != 1:
-            raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
-        return balance_and_compact(atom_array.matrix[:,:,0], atom_array.target, do_ejection)
-
-# Balance and Compact
 class BCv2(Algorithm):
     """Implements the Balance and Compact algorithm, as originally described
        in [PRA 70, 040302(R) (2004)](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.70.040302)
@@ -152,3 +100,23 @@ class BCv2(Algorithm):
         if atom_array.n_species != 1:
             raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
         return bcv2(atom_array, do_ejection)
+    
+
+
+# Balance and Compact
+class BalanceAndCompact(Algorithm):
+    """ NOTE: we recommend that you use the (faster) BCv2 algorithm. 
+        This is an older version that we used to make Fig. 2 in the paper.
+
+        A slow implementation of the Balance and Compact algorithm, as originally described
+        in [PRA 70, 040302(R) (2004)](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.70.040302)
+       
+        Supported configurations: `Configurations.MIDDLE_FILL`"""
+
+    def __repr__(self):
+        return 'Balance & Compact (slow)'
+
+    def get_moves(self, atom_array: AtomArray, do_ejection: bool = False):
+        if atom_array.n_species != 1:
+            raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
+        return balance_and_compact(atom_array.matrix[:,:,0], atom_array.target, do_ejection)

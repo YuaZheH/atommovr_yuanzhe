@@ -1,10 +1,5 @@
 # Code to visualize the atom array and generate gifs of the rearrangement process.
 
-# # # # # # # # # # # # # # # # # # # # #
-# Authors: Bo-Yu Chen and Nikhil Harle  #
-# Date modified: 2025-07-11             #
-# # # # # # # # # # # # # # # # # # # # #
-
 import imageio.v2 as imageio
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
@@ -52,7 +47,7 @@ def single_species_image(matrix, move_list: list = [], plt_spacer: float = 0.25,
     _check_and_fix_lims(ax, len(matrix[0]), len(matrix))
 
     ax.set_aspect('equal') # Make the circles appear closer
-    # ax.axis('off') # Turn off the axis for a prettier plot
+    ax.axis('off') # Turn off the axis for a prettier plot
     plt.gca().invert_yaxis() # invert y axis so that it visually represents the matrix state
     if savename != '':
         plt.savefig(f'figs/{savename}')

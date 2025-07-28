@@ -1,3 +1,5 @@
+# Collection of ErrorModel objects representing various loss processes
+
 import copy
 import random
 import numpy as np

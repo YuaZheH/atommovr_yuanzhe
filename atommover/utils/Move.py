@@ -1,3 +1,5 @@
+# Object representing a single atom move
+
 import numpy as np
 
 class Move:

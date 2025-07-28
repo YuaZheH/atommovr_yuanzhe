@@ -10,7 +10,6 @@
 
 from atommover.utils.AtomArray import AtomArray
 from atommover.algorithms.Algorithm_class import Algorithm
-from atommover.algorithms.source.Sheng2022 import first_dual_species_rearrange
 from atommover.algorithms.source.inside_out import inside_out_algorithm
 from atommover.algorithms.source.naive_parallel_Hung import naive_par_Hung
 
@@ -18,17 +17,7 @@ from atommover.algorithms.source.naive_parallel_Hung import naive_par_Hung
 # Existing algorithms from the literature #
 ###########################################
 
-class Sheng2022(Algorithm):
-    """
-    Implements the dual-species rearrangement protocol described in 
-    [Sheng et al. 2022](https://journals.aps.org/prl/article/10.1103/PhysRevLett.128.083202/figures/2/large).
-    """
-    
-    def __repr__(self):
-        return 'Sheng2022'
-    
-    def get_moves(self, dual_sp_array: AtomArray):
-        return first_dual_species_rearrange(dual_sp_array)
+
 
 ###########################################
 # New algorithms proposed in our work #
@@ -36,7 +25,7 @@ class Sheng2022(Algorithm):
 
 class InsideOut(Algorithm):
     """
-    Implements the inside-out algorithm.
+    Implements the InsideOut algorithm.
     """
 
     def __repr__(self):

@@ -1,3 +1,5 @@
+# Core object for simulating noise and loss processes
+
 import numpy as np
 
 from atommover.utils.Move import Move
