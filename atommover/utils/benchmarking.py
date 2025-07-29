@@ -7,6 +7,7 @@ import random
 import math
 import numpy as np
 import xarray as xr
+from typing import Union
 import matplotlib.pyplot as plt
 
 from atommover.utils.errormodels import ZeroNoise
@@ -67,10 +68,12 @@ def evaluate_moves(array: AtomArray ,move_list: list):
 
 class BenchmarkingFigure():
     """ 
-        NB: this No longer supported.
+        NB: this is a placeholder class to mark an opportunity for future feature development. It is not currently operational.
+
+
     Class that specifies plot parameters and figure types to be used in conjunction with the `Benchmarking` class.
     
-    NB: this class just specifies what you want to plot, to actually plot you have to pass it to an instance of the 
+    This class just specifies what you want to plot, to actually plot you have to pass it to an instance of the 
     `Benchmarking` class and call the `plot_results()` function.
 
     ## Parameters
@@ -207,8 +210,9 @@ class Benchmarking():
         the algorithms to compare.
     - `figure_output` (`BenchmarkingFigure`):
         an object for plotting.
-    - `target_configs` (list of `Configurations` objects): 
-        the target configurations to prepare.
+    - `target_configs` (list of `Configurations` objects OR a list of np.ndarrays representing the explicit target configs.): 
+        the target patterns to prepare.
+        IF a list of np.ndarrays, must provide targets for all system sizes; i.e. must have shape (len(sys_sizes), #targets), where #targets is the number of target configs.
     - `sys_sizes` (range):
         lengths of the square arrays that you want to look at (sqrt(N), where N is the number of tweezer sites).
     - `exp_params` (`PhysicalParams`):
@@ -218,15 +222,14 @@ class Benchmarking():
 
     ## Example Usage
     
-    Runs the benchmarking round and generates a figure.
+    Creates an instance of the class and runs a benchmarking round.
         `instance = Benchmarking()`
         `instance.run()`
-        `instance.show()`
     """
     
     def __init__(self, 
                  algos: list = [Algorithm()], 
-                 target_configs: list = [Configurations.MIDDLE_FILL], 
+                 target_configs: Union[list, np.ndarray] = [Configurations.MIDDLE_FILL], 
                  error_models_list: list = [ZeroNoise()],
                  phys_params_list: list = [PhysicalParams()],
                  sys_sizes: list = list(range(10,16)), 
@@ -236,37 +239,28 @@ class Benchmarking():
                  n_species: int = 1):
         # initializing the sweep modules
         self.algos, self.n_algos = algos, len(algos)
-        self.target_configs, self.n_targets = target_configs, len(target_configs)
         self.system_size_range, self.n_sizes = sys_sizes, len(sys_sizes)
         self.error_models_list, self.n_models = error_models_list, len(error_models_list)
         self.phys_params_list, self.n_parsets = phys_params_list, len(phys_params_list)
         self.rounds_list, self.n_rounds = rounds_list, len(rounds_list)
 
+        # initializing target configs depending on whether they were explicitly specified
+        if isinstance(target_configs, list):
+            self.istargetlist = True
+            self.target_configs, self.n_targets = target_configs, len(target_configs)
+        elif isinstance(target_configs, np.ndarray):
+            self.istargetlist = False
+            self.target_configs = target_configs
+            self.n_targets = len(target_configs[0])
+            if len(target_configs) != self.n_sizes:
+                raise IndexError(f"Number of system sizes {self.n_sizes} and shape of `target_configs` {np.shape(target_configs)} does not match. `target_configs` ust have shape (len(sys_sizes), [number of target configs]). ")
+        else:
+            raise TypeError("`target_configs` must be a list of Configuration objects or an np.ndarray.")
+
         # initializing other variables
         self.n_shots = n_shots
         self.figure_output = figure_output
         self.tweezer_array = AtomArray(n_species = n_species)
-
-    def _input_error_check(self):
-        if self.figure_output.figure_type not in ["scale", "pattern", "hist"]:
-                raise Exception("Invalid figure type. Choose from 'scale', 'pattern', 'hist'.")
-        if len(self.algos) > 1:
-            if (len(self.target_config) > 1 or len(self.exp_params_list) > 1):
-                raise Exception(f"Too many benchmarking variables. There are {len(self.algos)} \
-                                algorithms, {len(self.target_config)} desired configurations, \
-                                and {len(self.exp_params_list)} sets of parameters.")
-            elif self.figure_output.figure_type == "pattern":
-                raise Exception("Too many algorithms for scaling benchmarking of different target configurations.")
-        else:
-            if self.figure_output.figure_type == "scale" and \
-               (len(self.target_configs) > 1 or len(self.exp_params_list) > 1):
-                raise Exception("Cannot have more than 1 target config AND more than  for scaling benchmarking of different algorithms.")
-            
-            if self.figure_output.figure_type == "pattern" and len(self.algos) > 1:
-                raise Exception("Too many algorithms for scaling benchmarking of different target configurations.")
-            
-            if self.figure_output.figure_type == "hist" and len(self.target_config) > 1:
-                raise Exception("Too many target configurations for histogram benchmarking of different algorithms.")
 
     def plot_results(self, save = False, savename = None):
         if self.figure_output.figure_type == "scale":
@@ -283,7 +277,6 @@ class Benchmarking():
             if savename == None:
                 savename = 'pattern'
             self.figure_output.generate_pattern_figure(list(self.system_size_range), self.benchmarking_results, "Benchmarking results", "Array length (# atoms)")
-
 
     def save(self, savename):
         if savename[-3:] == '.nc':
@@ -307,6 +300,9 @@ class Benchmarking():
         """
         self.algos = dataset['algorithm'].values
         self.target_configs = dataset['target'].values
+        self.istargetlist = True
+        if isinstance(self.target_configs[0], np.ndarray):
+            self.istargetlist = False
         self.system_size_range = dataset['sys size'].values
         self.error_models_list = dataset['error model'].values
         self.phys_params_list = dataset['physical params'].values
@@ -326,7 +322,20 @@ class Benchmarking():
         based on the current set of parameters.
         """
         self.n_algos = len(self.algos)
-        self.n_targets = len(self.target_configs)
+        if self.istargetlist:
+            self.n_targets = len(self.target_configs)
+        else:
+            self.n_targets = len(self.target_configs[0])
+        if isinstance(self.target_configs, list) or not isinstance(self.target_configs[0], np.ndarray):
+            self.istargetlist = True
+            self.n_targets = len(self.target_configs)
+        elif isinstance(self.target_configs, np.ndarray):
+            self.istargetlist = False
+            self.n_targets = len(self.target_configs[0])
+            if len(self.target_configs) != self.n_sizes:
+                raise IndexError(f"Number of system sizes {self.n_sizes} and shape of `target_configs` {np.shape(target_configs)} does not match. `target_configs` ust have shape (len(sys_sizes), [number of target configs]). ")
+        else:
+            raise TypeError("`target_configs` must be a list of Configuration objects or an np.ndarray.")
         self.n_sizes = len(self.system_size_range)
         self.n_models = len(self.error_models_list)
         self.n_parsets = len(self.phys_params_list)
@@ -338,8 +347,6 @@ class Benchmarking():
         
         Saves the results in the variable `self.benchmarking_results`.
         """
-        # Check the input conditions and raise an error if they are not met
-        # self._input_error_check()
 
         # initializing result arrays
         self.get_result_array_dims()
@@ -373,15 +380,20 @@ class Benchmarking():
                                                                     load_prob = self.tweezer_array.params.loading_prob, 
                                                                     max_sys_size = np.max(self.system_size_range),
                                                                     n_species = self.tweezer_array.n_species)
-            for targ_ind, target in enumerate(self.target_configs):
-                if target == Configurations.RANDOM:
-                    self.target_config_storage = generate_random_target_configs(self.n_shots,
-                                                                                load_prob = self.tweezer_array.params.target_occup_prob)
+            for targ_ind in range(self.n_targets):
+                target = None
+                if self.istargetlist:
+                    target = self.target_configs[targ_ind]
+                    if target == Configurations.RANDOM:
+                        self.target_config_storage = generate_random_target_configs(self.n_shots,
+                                                                                    load_prob = self.tweezer_array.params.target_occup_prob)
                 for model_ind, error_model in enumerate(self.error_models_list):
                     self.tweezer_array.error_model = error_model
 
                     for size_ind, size in enumerate(self.system_size_range):
                         self.tweezer_array.shape = [size,size]
+                        if not self.istargetlist:
+                            self.tweezer_array.target = self.target_configs[size_ind, targ_ind]
 
                         for alg_ind, algo in enumerate(self.algos):
 
@@ -394,7 +406,6 @@ class Benchmarking():
                                 wrong_places_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = wrong_places
                                 n_atoms_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = atoms_in_arrays
                                 n_targets_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = atoms_in_target
-                        # print(f'size {size} completed')
         
         success_rates_da = xr.DataArray(success_rate_array, dims=dims, coords = coords)
         success_times_da = xr.DataArray(time_array, dims=dims, coords = coords)
@@ -411,7 +422,7 @@ class Benchmarking():
                                                 'n targets': n_targets_da})
 
             
-    def _run_benchmark_round(self, algorithm, do_ejection: bool = False, pattern = None, num_rounds = 1) -> tuple[float, float, list, list, list]:
+    def _run_benchmark_round(self, algorithm, do_ejection: bool = False, pattern = None, num_rounds = 1) -> tuple[float, float, list, list, list, list]:
         success_times = []
         success_flags = []
         filling_fractions = []
@@ -419,15 +430,17 @@ class Benchmarking():
         atoms_in_arrays = []
         atoms_in_targets = []
 
-        if pattern != Configurations.RANDOM:
-            self.tweezer_array.generate_target(pattern, occupation_prob = self.tweezer_array.params.loading_prob)
+        if self.istargetlist:
+            if pattern != Configurations.RANDOM:
+                self.tweezer_array.generate_target(pattern, occupation_prob = self.tweezer_array.params.loading_prob)
                 
         for shot in range(self.n_shots):
             # getting initial and final target configs
             initial_config = self.init_config_storage[shot][:self.tweezer_array.shape[0], :self.tweezer_array.shape[1]]
             self.tweezer_array.matrix = initial_config.reshape([self.tweezer_array.shape[0], self.tweezer_array.shape[1], self.tweezer_array.n_species])
-            if pattern == Configurations.RANDOM:
-                self.tweezer_array.target = self.target_config_storage[shot][:self.tweezer_array.shape[0], :self.tweezer_array.shape[1]].reshape([self.tweezer_array.shape[0], self.tweezer_array.shape[1], 1])
+            if self.istargetlist:
+                if pattern == Configurations.RANDOM:
+                    self.tweezer_array.target = self.target_config_storage[shot][:self.tweezer_array.shape[0], :self.tweezer_array.shape[1]].reshape([self.tweezer_array.shape[0], self.tweezer_array.shape[1], 1])
             init_count = 0
             while np.sum(initial_config) < np.sum(self.tweezer_array.target) and init_count < 100:
                 self.tweezer_array.load_tweezers()
