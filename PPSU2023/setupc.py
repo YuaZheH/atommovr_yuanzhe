@@ -15,8 +15,6 @@ os.makedirs(output_dir, exist_ok=True)
 extra_compile_args = []
 if sys.platform == "win32":
     # MSVC specific flags (example: disable warning C4100: unreferenced formal parameter)
-    #extra_compile_args = ["/wd4100", "/wd4189", "/wd4706"]
-    # To GCC flags:
     extra_compile_args=['-Wno-unused-parameter', '-Wno-unused-variable', '-Wno-parentheses']
 else:
     # GCC/Clang flags
