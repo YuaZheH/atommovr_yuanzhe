@@ -1,9 +1,9 @@
-# Authors:
 # source code in C (bttlThreshold): [PPSU2023](https://inria.hal.science/hal-04146298)
-# wrapper: ChatGPT
 
 import ctypes
+import io
 import os
+import platform
 import subprocess
 import sys
 
@@ -32,9 +32,29 @@ except OSError as e:
     build_shared_library()
     lib = ctypes.CDLL(LIB_PATH)
 
-libc = ctypes.CDLL(None)
-stdout_fileno = sys.stdout.fileno()
-libc.fflush(None)  # Flush C stdio buffers
+# Platform-specific handling for accessing the standard C library
+try:
+    if platform.system() == "Windows":
+        # On Windows, use msvcrt for C standard library functions
+        libc = ctypes.CDLL("msvcrt")
+    else:
+        # On Unix-like systems (Linux, macOS), use None to get the default C library
+        libc = ctypes.CDLL(None)
+    
+    try:
+        stdout_fileno = sys.stdout.fileno()
+        libc.fflush(None)  # Flush C stdio buffers
+    except (AttributeError, OSError, io.UnsupportedOperation):
+        # If fileno() is not available (e.g., in Jupyter), skip the flush
+        sys.stdout.flush()  # Use Python's flush instead
+        stdout_fileno = None
+except (OSError, AttributeError) as e:
+    # If we can't access the C library, define a no-op flush function
+    print(f"[WARNING] Could not access C library for fflush: {e}")
+    def noop_flush():
+        sys.stdout.flush()  # Use Python's flush instead
+    libc = type('MockLibc', (), {'fflush': lambda x: noop_flush()})()
+    stdout_fileno = None
 
 # Define the function signature for bttlThreshold
 lib.bttlThreshold.argtypes = [
