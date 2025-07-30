@@ -61,7 +61,7 @@ def dual_species_image(matrix, move_list: list = [], plt_spacer: float = 0.25, a
 
     blue_inds_x, blue_inds_y, yellow_inds_x, yellow_inds_y, white_inds_x, white_inds_y = _dual_species_get_inds_for_circ_matr_plot(matrix)
 
-    dotsize = 800/len(matrix)
+    dotsize = np.min([800/np.sqrt(len(matrix)**2 + len(matrix[0])**2), 80])
     if atoms == SPECIES2NAME:
         ax.scatter(blue_inds_x, blue_inds_y, s=dotsize, c=NOATOMCOL, edgecolor=EDGECOL) # Plot correct color for Cs atoms
         ax.scatter(yellow_inds_x, yellow_inds_y, s=dotsize, c=SPECIES2COL, edgecolor=EDGECOL)
@@ -72,7 +72,6 @@ def dual_species_image(matrix, move_list: list = [], plt_spacer: float = 0.25, a
         ax.scatter(blue_inds_x, blue_inds_y, s=dotsize, c=SPECIES1COL)#, edgecolor=EDGECOL)
         ax.scatter(yellow_inds_x, yellow_inds_y, s=dotsize, c=SPECIES2COL)#, edgecolor=EDGECOL)
     
-    # ax.scatter(yellow_inds_x, yellow_inds_y, s=80, c='darkviolet', edgecolor=EDGECOLOR) # Bernien lab GM 270 easter egg :)
     ax.scatter(white_inds_x, white_inds_y, s=dotsize, c=NOATOMCOL, edgecolor=EDGECOL)
     
     eject_x = []
@@ -96,11 +95,12 @@ def dual_species_image(matrix, move_list: list = [], plt_spacer: float = 0.25, a
                             width = 0.03, 
                             length_includes_head = True)
             
+    _check_and_fix_lims(ax, len(matrix[0]), len(matrix))
 
     # Make the circles appear closer
     ax.set_aspect('equal')
     ax.axis('off')
-    
+    plt.gca().invert_yaxis() # invert y axis so that it visually represents the matrix state
     if savename != '':
         plt.savefig(f'figs/{savename}')
     
@@ -113,12 +113,7 @@ def dual_species_image(matrix, move_list: list = [], plt_spacer: float = 0.25, a
 def make_single_species_gif(single_species_array, move_list, params: PhysicalParams = PhysicalParams(), savename: str = 'matrix_animation', plt_spacer: float = 0.25, duration: float = 200):
     # making reference time
     t_total = 0
-    # if len(np.shape(single_species_array.matrix)) > 2 and np.shape(single_species_array.matrix)[2] == 1:
-    #     matrix = np.array(copy.deepcopy(single_species_array.matrix[:,:,0]))
-    # elif len(np.shape(single_species_array.matrix)) == 2:
-    #     matrix = np.array(copy.deepcopy(single_species_array.matrix))
-    # else:
-    #     raise ValueError(f'Atom array has shape {np.shape(single_species_array.matrix)}, which is not correct for single species. Did you meant to use `make_dual_species_gif()`?')
+
     dotsize = np.min([800/np.sqrt(len(single_species_array.matrix)**2 + len(single_species_array.matrix[0])**2), 80])
     
     # plotting the initial configuration
@@ -250,22 +245,25 @@ def make_dual_species_gif(dual_species_array, move_list: list, savename = 'matri
     t_total = 0
     # arrays = copy.deepcopy(dual_species_matrix)
     
-    dotsize = 800/len(dual_species_array.matrix)
+    dotsize = np.min([800/np.sqrt(len(dual_species_array.matrix)**2 + len(dual_species_array.matrix[0])**2), 80])
     # plotting the initial configuration
+    fig, ax = plt.subplots()
     blue_inds_x, blue_inds_y, \
     yellow_inds_x, yellow_inds_y, \
     white_inds_x, white_inds_y = _dual_species_get_inds_for_circ_matr_plot(dual_species_array.matrix)
 
-    plt.scatter(blue_inds_x, blue_inds_y, s=dotsize, c=SPECIES1COL, edgecolor=EDGECOL)
-    plt.scatter(yellow_inds_x, yellow_inds_y, s=dotsize, c=SPECIES2COL, edgecolor=EDGECOL)
-    plt.scatter(white_inds_x, white_inds_y, s=dotsize, c=NOATOMCOL, edgecolor=EDGECOL)
+    ax.scatter(blue_inds_x, blue_inds_y, s=dotsize, c=SPECIES1COL, edgecolor=EDGECOL)
+    ax.scatter(yellow_inds_x, yellow_inds_y, s=dotsize, c=SPECIES2COL, edgecolor=EDGECOL)
+    ax.scatter(white_inds_x, white_inds_y, s=dotsize, c=NOATOMCOL, edgecolor=EDGECOL)
 
+    ax.set_aspect('equal')
     if t_total> 1e-3:
-        plt.title(f"t = {round(t_total*1e3,3)} ms")
-        plt.axis('off')
+        ax.set_title(f"t = {round(t_total*1e3,3)} ms")
+        ax.axis('off')
     else:
-        plt.title(f"t = {int(t_total*1e6)} \u03bc s")
-        plt.axis('off')
+        ax.set_title(f"t = {int(t_total*1e6)} \u03bc s")
+        ax.axis('off')
+    plt.gca().invert_yaxis() # invert y axis so that it visually represents the matrix state
     plt.savefig('./figs/frames/frame0')
     plt.clf()
 
@@ -274,13 +272,14 @@ def make_dual_species_gif(dual_species_array, move_list: list, savename = 'matri
         # performing the move
         [failed_moves, flags], move_time = dual_species_array.move_atoms(move_set)
         # plotting the frame
+        fig, ax = plt.subplots()
         blue_inds_x, blue_inds_y, \
         yellow_inds_x, yellow_inds_y, \
         white_inds_x, white_inds_y = _dual_species_get_inds_for_circ_matr_plot(dual_species_array.matrix)
     
-        plt.scatter(blue_inds_x, blue_inds_y, s=dotsize, c=SPECIES1COL, edgecolor=EDGECOL)
-        plt.scatter(yellow_inds_x, yellow_inds_y, s=dotsize, c=SPECIES2COL, edgecolor=EDGECOL)
-        plt.scatter(white_inds_x, white_inds_y, s=dotsize, c=NOATOMCOL, edgecolor=EDGECOL)
+        ax.scatter(blue_inds_x, blue_inds_y, s=dotsize, c=SPECIES1COL, edgecolor=EDGECOL)
+        ax.scatter(yellow_inds_x, yellow_inds_y, s=dotsize, c=SPECIES2COL, edgecolor=EDGECOL)
+        ax.scatter(white_inds_x, white_inds_y, s=dotsize, c=NOATOMCOL, edgecolor=EDGECOL)
 
 
         distances = []
@@ -306,7 +305,7 @@ def make_dual_species_gif(dual_species_array, move_list: list, savename = 'matri
                     eject_y.append(len(dual_species_array.matrix[0])-move.from_row)
                     
             # plotting an arrow for each individual move
-            plt.arrow(move.from_col+np.sign(move.dx)*plt_spacer, 
+            ax.arrow(move.from_col+np.sign(move.dx)*plt_spacer, 
                         len(dual_species_array.matrix[0])-(move.from_row+np.sign(move.dy)*plt_spacer), 
                         move.dx-np.sign(move.dx)*2*plt_spacer, 
                         -move.dy+np.sign(move.dy)*2*plt_spacer, 
@@ -329,24 +328,24 @@ def make_dual_species_gif(dual_species_array, move_list: list, savename = 'matri
                 collision_fail_y.append(len(dual_species_array.matrix[0])-move.to_row)
 
             if len(eject_x) > 0:
-                plt.scatter(eject_x, eject_y, s=dotsize, c=EJECTCOL, edgecolor=EDGECOL)
+                ax.scatter(eject_x, eject_y, s=dotsize, c=EJECTCOL, edgecolor=EDGECOL)
             if len(pickup_fail_x) > 0:
-                plt.scatter(pickup_fail_x, pickup_fail_y, s=dotsize, c=PICKUPFAILCOL, edgecolor=EDGECOL)
+                ax.scatter(pickup_fail_x, pickup_fail_y, s=dotsize, c=PICKUPFAILCOL, edgecolor=EDGECOL)
             if len(putdown_fail_x) > 0:
-                plt.scatter(putdown_fail_x, putdown_fail_y, s=dotsize, c=PUTDOWNFAILCOL, edgecolor=EDGECOL)
+                ax.scatter(putdown_fail_x, putdown_fail_y, s=dotsize, c=PUTDOWNFAILCOL, edgecolor=EDGECOL)
             if len(collision_fail_x) > 0:
-                plt.scatter(collision_fail_x, collision_fail_y, s=dotsize, c=COLLISIONFAILCOL, edgecolor=EDGECOL)
+                ax.scatter(collision_fail_x, collision_fail_y, s=dotsize, c=COLLISIONFAILCOL, edgecolor=EDGECOL)
 
         # keeping track of the time
         t_total += move_time
-
+        ax.set_aspect('equal')
         if t_total> 1e-3:
-            plt.title(f"t = {round(t_total*1e3,3)} ms")
-            plt.axis('off')
+            ax.set_title(f"t = {round(t_total*1e3,3)} ms")
+            ax.axis('off')
         else:
-            plt.title(f"t = {int(t_total*1e6)} \u03bcs")
-            plt.axis('off')
-
+            ax.set_title(f"t = {int(t_total*1e6)} \u03bcs")
+            ax.axis('off')
+        plt.gca().invert_yaxis() # invert y axis so that it visually represents the matrix state
         plt.savefig(f'./figs/frames/frame{move_ind+1}')
         plt.clf()
 
@@ -368,7 +367,7 @@ def make_dual_species_gif(dual_species_array, move_list: list, savename = 'matri
 
 def _get_inds_for_circ_matr_plot(matrix: np.ndarray):
     """
-        Given a matrix whose entries $ \in {0,1} $,
+        Given a matrix whose entries $ in {0,1} $,
         returns lists of coordinates which give the locations
         of the 1s and 0s, respectively, in the matrix.
     
