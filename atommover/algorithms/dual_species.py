@@ -36,7 +36,7 @@ class InsideOut(Algorithm):
 
 class NaiveParHung(Algorithm):
     """
-    Implements the naive extension of ParHungarian for dual-species array.
+    Implements a naive extension of ParHungarian for dual-species arrays.
     """
 
     def __repr__(self):
