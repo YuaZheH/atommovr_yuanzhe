@@ -5,16 +5,17 @@
 
 #ifdef _WIN32
 // Windows-specific includes
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <stdint.h>
 #pragma comment(lib, "ws2_32.lib")  // Link Winsock for select()
 
 // timeval structure (not in Windows by default unless winsock is included)
-#ifndef HAVE_STRUCT_TIMEVAL
+#ifndef _TIMEVAL_DEFINED
+#define _TIMEVAL_DEFINED
 struct timeval {
-    long tv_sec;   // seconds
-    long tv_usec;  // microseconds
+    long tv_sec;
+    long tv_usec;
 };
 #endif
 
