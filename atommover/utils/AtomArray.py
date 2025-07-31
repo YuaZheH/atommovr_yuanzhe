@@ -40,7 +40,7 @@ class AtomArray:
     """
     def __init__(self, shape: list = [10,10], n_species: int = 1, params: PhysicalParams = PhysicalParams(), error_model: ErrorModel = ZeroNoise(), geom: ArrayGeometry = ArrayGeometry.RECTANGULAR):
         self.geom = geom
-        self.shape = shape
+        super().__setattr__("shape", shape)
         if n_species in [1,2] and type(n_species) == int:
             self.n_species = n_species
         else:
@@ -48,11 +48,21 @@ class AtomArray:
         self.params = params
         self.error_model = error_model
 
-        if self.geom == ArrayGeometry.SQUARE or self.geom == ArrayGeometry.RECTANGULAR:
-            self.matrix = np.zeros([self.shape[0], self.shape[1], self.n_species])
-            self.target = np.zeros([self.shape[0], self.shape[1], self.n_species])
-            self.target_Rb = np.zeros([self.shape[0], self.shape[1]])
-            self.target_Cs = np.zeros([self.shape[0], self.shape[1]])
+        self.matrix = np.zeros([self.shape[0], self.shape[1], self.n_species])
+        self.target = np.zeros([self.shape[0], self.shape[1], self.n_species])
+        self.target_Rb = np.zeros([self.shape[0], self.shape[1]])
+        self.target_Cs = np.zeros([self.shape[0], self.shape[1]])
+
+    def __setattr__(self, key, value):
+        if key == "shape":
+            self.matrix = np.zeros([value[0], value[1], self.n_species])
+            self.target = np.zeros([value[0], value[1], self.n_species])
+            self.target_Rb = np.zeros([value[0], value[1]])
+            self.target_Cs = np.zeros([value[0], value[1]])
+            # (Optional) run any custom logic here
+        # Always delegate to superclass to avoid recursion
+        super().__setattr__(key, value)
+        
 
     def load_tweezers(self):
         """

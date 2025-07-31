@@ -185,8 +185,12 @@ class Benchmarking():
         lengths of the square arrays that you want to look at (sqrt(N), where N is the number of tweezer sites).
     - `exp_params` (`PhysicalParams`):
         error and experimental parameters.
-    - `n_shots` (int):
+    - `n_shots` (int, default 100):
         number of repetitions per (algorithm or target config) per system size.
+    - `n_species` (int, default 1):
+        number of atomic species.
+    - `check_sufficient_atoms` (bool, default True):
+        if True, checks whether initial configurations have enough atoms, and regenerates new ones if not.
 
     ## Example Usage
     
@@ -205,7 +209,7 @@ class Benchmarking():
                  figure_output: BenchmarkingFigure = BenchmarkingFigure(),
                  n_shots: int = 100,
                  n_species: int = 1,
-                 init_config_storage: Union[list,np.ndarray] = []):
+                 check_sufficient_atoms: bool = True):
         # initializing the sweep modules (minus target configs, see below)
         self.algos, self.n_algos = algos, len(algos)
         self.system_size_range, self.n_sizes = sys_sizes, len(sys_sizes)
@@ -215,22 +219,9 @@ class Benchmarking():
 
         # initializing other variables
         self.n_shots = n_shots
+        self.check_sufficient_atoms = check_sufficient_atoms
         self.figure_output = figure_output
         self.tweezer_array = AtomArray(n_species = n_species)
-
-        # checking whether init configs were manually supplied
-        if isinstance(init_config_storage, list):
-            self.custominitconfigs = False
-            if len(init_config_storage) !=0:
-                raise TypeError("User-specified initial configurations must be stored in an np.ndarray object with dimensions (n_shots, n_sys_sizes).")
-        elif isinstance(init_config_storage, np.ndarray):
-            self.custominitconfigs = True
-            init_storage_shape = np.shape(init_config_storage)
-            if init_storage_shape[0] != n_shots or init_storage_shape[1] != self.n_sizes:
-                raise IndexError(f"Expected `init_config_storage` to have shape ({n_shots}, {self.n_sizes}); received shape {init_storage_shape}.")
-            self.init_configs = init_config_storage
-        else:
-            raise TypeError(f"`init_config_storage` must be an np.ndarray object, not of type {type(init_config_storage)}.")
 
         # initializing target configs depending on whether they were explicitly specified
         if isinstance(target_configs, list):
@@ -332,8 +323,12 @@ class Benchmarking():
 
         # for xarray object
         dims = ("algorithm", "target", "sys size", "error model", "physical params", "num rounds")
+        if self.istargetlist:
+            coord_targets = self.target_configs
+        else:
+            coord_targets = [f'Custom{i}' for i in range(self.n_targets)]
         coords = {"algorithm": self.algos, 
-                  "target": self.target_configs,
+                  "target": coord_targets,
                   "sys size": self.system_size_range,
                   "error model": self.error_models_list,
                   "physical params": self.phys_params_list,
@@ -342,8 +337,7 @@ class Benchmarking():
         # iterating through sweep parameters and running benchmarking rounds
         for param_ind, parset in enumerate(self.phys_params_list):
             self.tweezer_array.params = parset
-            if not self.custominitconfigs:
-                self.init_config_storage = generate_random_init_configs(self.n_shots, 
+            self.init_config_storage = generate_random_init_configs(self.n_shots, 
                                                                         load_prob = self.tweezer_array.params.loading_prob, 
                                                                         max_sys_size = np.max(self.system_size_range),
                                                                         n_species = self.tweezer_array.n_species)
@@ -362,10 +356,7 @@ class Benchmarking():
                         self.tweezer_array.shape = [size,size]
                         if not self.istargetlist:
                             self.tweezer_array.target = self.target_configs[size_ind, targ_ind]
-                        if self.custominitconfigs:
-                            self.init_config_storage = self.init_configs[:,size_ind]
                         for alg_ind, algo in enumerate(self.algos):
-
                             for round_ind, num_rounds in enumerate(self.rounds_list):
                                 success_rate, mean_success_time, fill_fracs, wrong_places, atoms_in_arrays, atoms_in_target = self._run_benchmark_round(algo, do_ejection=do_ejection, pattern = target, num_rounds=num_rounds)
                                 # populating result arrays
@@ -410,14 +401,16 @@ class Benchmarking():
             if self.istargetlist:
                 if pattern == Configurations.RANDOM:
                     self.tweezer_array.target = self.target_config_storage[shot][:self.tweezer_array.shape[0], :self.tweezer_array.shape[1]].reshape([self.tweezer_array.shape[0], self.tweezer_array.shape[1], 1])
-            # loop to ensure that the initial configuration has sufficient atoms.
-            init_count = 0
-            while np.sum(initial_config) < np.sum(self.tweezer_array.target) and init_count < 100:
-                self.tweezer_array.load_tweezers()
-                initial_config = self.tweezer_array.matrix
-                init_count += 1
-            if init_count == 100:
-                print(f'[WARNING] could not find initial configuration with enough atoms ({np.sum(self.tweezer_array.target)}) in target). Consider aborting run and choosing more suitable parameters.')
+            if self.check_sufficient_atoms:
+                # loop to ensure that the initial configuration has sufficient atoms.
+                init_count = 0
+                while np.sum(initial_config) < np.sum(self.tweezer_array.target) and init_count < 100:
+                    self.tweezer_array.load_tweezers()
+                    initial_config = self.tweezer_array.matrix
+                    init_count += 1
+                if init_count == 100:
+                    print(f'[WARNING] could not find initial configuration with enough atoms ({np.sum(self.tweezer_array.target)}) in target). \
+                          Consider aborting run and choosing more suitable parameters. If this is intentional, however, you can turn off this check by setting `check_sufficient_atoms` to False when calling `Benchmarking()`.')
             round_count = 0
             if num_rounds <= 0 or not isinstance(num_rounds, int):
                 raise ValueError(f'Number of rearrangement rounds (entered as {num_rounds}) cannot be 0, negative, nor a non-integer value.')
