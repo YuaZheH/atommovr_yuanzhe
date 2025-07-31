@@ -57,14 +57,6 @@ def check_atom_enough(arrays: AtomArray) -> bool:
         return True
     else:
         return False
-    
-def rearrangement_complete(arrays: AtomArray) -> bool:
-    """
-    Check if the rearrangement complete for both Rb and Cs.
-    """
-    Rb_complete = np.array_equal(np.multiply(arrays.matrix[:,:,0], arrays.target_Rb), arrays.target_Rb)
-    Cs_complete = np.array_equal(np.multiply(arrays.matrix[:,:,1], arrays.target_Cs), arrays.target_Cs)
-    return Rb_complete and Cs_complete
 
 def layer_complete(layer_factor: int, arrays: AtomArray, is_site_correct: Callable[[int, int], bool]) -> bool:
     """
