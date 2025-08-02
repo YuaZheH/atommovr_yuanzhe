@@ -320,6 +320,7 @@ class Benchmarking():
         wrong_places_array = np.zeros(result_array_dims, dtype = 'object')
         n_atoms_array = np.zeros(result_array_dims, dtype = 'object')
         n_targets_array = np.zeros(result_array_dims, dtype = 'object')
+        sufficient_atom_rate = np.zeros(result_array_dims, dtype = 'float')
 
         # for xarray object
         dims = ("algorithm", "target", "sys size", "error model", "physical params", "num rounds")
@@ -358,7 +359,7 @@ class Benchmarking():
                             self.tweezer_array.target = self.target_configs[size_ind, targ_ind]
                         for alg_ind, algo in enumerate(self.algos):
                             for round_ind, num_rounds in enumerate(self.rounds_list):
-                                success_rate, mean_success_time, fill_fracs, wrong_places, atoms_in_arrays, atoms_in_target = self._run_benchmark_round(algo, do_ejection=do_ejection, pattern = target, num_rounds=num_rounds)
+                                success_rate, mean_success_time, fill_fracs, wrong_places, atoms_in_arrays, atoms_in_target, sufficient_rate = self._run_benchmark_round(algo, do_ejection=do_ejection, pattern = target, num_rounds=num_rounds)
                                 # populating result arrays
                                 success_rate_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = success_rate
                                 time_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = mean_success_time
@@ -366,6 +367,7 @@ class Benchmarking():
                                 wrong_places_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = wrong_places
                                 n_atoms_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = atoms_in_arrays
                                 n_targets_array[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = atoms_in_target
+                                sufficient_atom_rate[alg_ind, targ_ind, size_ind, model_ind, param_ind, round_ind] = sufficient_rate
         
         success_rates_da = xr.DataArray(success_rate_array, dims=dims, coords = coords)
         success_times_da = xr.DataArray(time_array, dims=dims, coords = coords)
@@ -373,13 +375,15 @@ class Benchmarking():
         wrong_places_da = xr.DataArray(wrong_places_array, dims=dims, coords = coords)
         n_atoms_da = xr.DataArray(n_atoms_array, dims=dims, coords = coords)
         n_targets_da = xr.DataArray(n_targets_array, dims=dims, coords = coords)
+        sufficient_atom_rate_da = xr.DataArray(sufficient_atom_rate, dims=dims, coords = coords)
         
         self.benchmarking_results = xr.Dataset({'success rate': success_rates_da, 
                                                 'time': success_times_da, 
                                                 'filling fraction': fill_fracs_da,
                                                 'wrong places': wrong_places_da,
                                                 'n atoms': n_atoms_da,
-                                                'n targets': n_targets_da})
+                                                'n targets': n_targets_da,
+                                                'sufficient rate': sufficient_atom_rate_da})
 
             
     def _run_benchmark_round(self, algorithm, do_ejection: bool = False, pattern = None, num_rounds = 1) -> tuple[float, float, list, list, list, list]:
@@ -389,6 +393,7 @@ class Benchmarking():
         wrong_places = []
         atoms_in_arrays = []
         atoms_in_targets = []
+        sufficient_flags = []
 
         if self.istargetlist:
             if pattern != Configurations.RANDOM:
@@ -444,7 +449,12 @@ class Benchmarking():
             atoms_in_arrays.append(int(np.sum(self.tweezer_array.matrix)))
             atoms_in_targets.append(int(np.sum(self.tweezer_array.target)))
 
-        return float(np.mean(success_flags)), float(np.mean(success_times)), filling_fractions, wrong_places, atoms_in_arrays, atoms_in_targets
+            if np.sum(initial_config) < np.sum(self.tweezer_array.target):
+                sufficient_flags.append(False)
+            else:
+                sufficient_flags.append(True)
+
+        return float(np.mean(success_flags)), float(np.mean(success_times)), filling_fractions, wrong_places, atoms_in_arrays, atoms_in_targets, float(np.mean(sufficient_flags))
 
 
     def plot_results(self, save = False, savename = None):
