@@ -40,16 +40,16 @@ conda env create -f environment.yml
 
 # Acknowledgments
 
-#### Collaborators and discussions
+## Collaborators and discussions
 
 Shraddha Anand, Will Eckner, Noah Glachman, Andy Goldschmidt, Kevin Singh, Mariesa Teo, and Nayana Tiwari.
 
-#### External code
+## External code
 - [bottled](https://gitlab.inria.fr/bora-ucar/bottled): (copied into [`\PPSU2023`](/PPSU2023/README.md))
   - Authors: Ioannis Panagiotas, Grégoire Pichon, Somesh Singh, Bora Uçar. 
   - Reference: *Engineering fast algorithms for the bottleneck matching problem.* ESA 2023 - The 31st Annual European Symposium on Algorithms, Sep 2023, Amsterdam (Hollande), Netherlands. [⟨hal-04146298v2⟩](https://inria.hal.science/hal-04146298v2)
 
-#### Funding Sources
+## Funding sources
 * Office of Naval Research (Grant No. N00014-23-1-2540)
 * Air Force Office of Scientific Research (Grant No. FA9550-21-1-0209)
 * Army Research Office (Grant no. W911NF2410388) 
