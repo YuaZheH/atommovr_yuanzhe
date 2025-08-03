@@ -67,10 +67,10 @@ class ArrayGeometry(IntEnum):
         [LattPy](https://lattpy.readthedocs.io/en/latest/)
     """
     SQUARE = 0
-    RECTANGULAR = 1 # NOT SUPPORTED YET
-    TRIANGULAR = 2 # NOT SUPPORTED YET
-    BRAVAIS = 3 # NOT SUPPORTED YET
-    DECORATED_BRAVAIS = 4 # NOT SUPPORTED YET
+    RECTANGULAR = 1 # NOT SUPPORTED YET; see CONTRIBUTING.md
+    TRIANGULAR = 2 # NSY
+    BRAVAIS = 3 # NSY
+    DECORATED_BRAVAIS = 4 # NSY
 
 
 #############

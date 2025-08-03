@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 79.81 51.38">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#radial-gradient-2);
+      }
+
+      .cls-2 {
+        fill: url(#radial-gradient);
+      }
+
+      .cls-3 {
+        fill: #231f20;
+        font-family: Courier, Courier;
+        font-size: 25.41px;
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="132.8" cy="379.22" fx="132.8" fy="379.22" r="4.06" gradientTransform="translate(614.37 -181.58) rotate(90) scale(1.49)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#357ab9"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-2" cx="-104.16" cy="27.85" fx="-104.16" fy="27.85" r="4.06" gradientTransform="translate(187.78 -6.4) scale(1.48)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fcc326"/>
+    </radialGradient>
+  </defs>
+  <g id="atommovr_logo_2">
+    <text id="at_m____m_vr" class="cls-3" transform="translate(9.5 22.5)"><tspan x="0" y="0">at m</tspan><tspan x="0" y="18.35">m vr</tspan></text>
+    <ellipse class="cls-2" cx="47.58" cy="16.05" rx="6.06" ry="6.04"/>
+    <ellipse class="cls-1" cx="33.44" cy="34.69" rx="6.01" ry="5.99"/>
+  </g>
+</svg>

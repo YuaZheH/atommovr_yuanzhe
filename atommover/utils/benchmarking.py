@@ -37,7 +37,8 @@ def evaluate_moves(array: AtomArray ,move_list: list):
 
 class BenchmarkingFigure():
     """ 
-        NB: this is a placeholder class to mark an opportunity for future feature development. It is not currently operational.
+    
+    NB: this is a placeholder class to mark an opportunity for future feature development (see CONTRIBUTING.md). It is not currently operational.
 
     Class that specifies plot parameters and figure types to be used in conjunction with the `Benchmarking` class.
     
