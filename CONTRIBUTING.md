@@ -10,6 +10,8 @@ In particular, the `Algorithm` and `ErrorModel` classes are very general, and th
 
 *Code maintenance and performance*
 - Adding more unit tests to `atommover.tests/`
+- Speeding up the core functions in `atommover.utils.move_utils.py`, `atommover.utils.core.py`. (This code is not currently optimized for speed.)
+- Speeding up the gif generation process in `atommover.utils.animation.py` (currently very slow).
 
 *New features*
 - Extending framework to support general array/lattice shapes
