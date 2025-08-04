@@ -2,9 +2,11 @@
 
 ## A simulation framework for rearrangement in atomic arrays
 
-by Nikhil Kiran Harle* ([khnikhil](https://github.com/khnikhil/khnikhil)), Bo-Yu Chen* ([phys-mattchen](https://github.com/phys-mattchen)), Bob Bao, and Hannes Bernien.
+by Nikhil Kiran Harle* ([khnikhil](https://github.com/khnikhil/khnikhil)), Bo-Yu Chen* ([phys-mattchen](https://github.com/phys-mattchen)) ([Website](https://phys-mattchen.github.io/)), Bob Bao, and Hannes Bernien.
 
-## ~~Fantastic beasts~~ Key features and `where to find them`
+*These authors contributed equally to this work
+
+## Key features and `where to find them`
 ![overview](/figs/fig1.svg)
 
 :books: Open-source library of rearrangement algorithms:   `atommover.algorithms/`
@@ -56,4 +58,16 @@ We gratefully thank Shraddha Anand, Will Eckner, Noah Glachman, Andy Goldschmidt
 * Nikhil acknowledges support from the National Science Foundation Graduate Research Fellowship (Grant No. DGE-2040434) 
 * Bo-Yu acknowledges support from the UChicago-Taiwan Student Exchange (UCTS) fellowship, National Taiwan University Fu Bell Scholarship, National Taiwan University College of Science Travel Grants and Chuan-Pu Lee Memorial Scholarship.
 
-Correspondence and request for materials should be directed to [Hannes](hannes.bernien@uibk.ac.at).
+## Citations
+Please consider citing our paper in your publications if it helps. Here is the bibtex:
+
+```
+@article{harle2025atommovr,
+  title={atommovr: An open-source simulation framework for rearrangement in atomic arrays},
+  author={Nikhil K. Harle and Bo-Yu Chen and Bob Bao and Hannes Bernien},
+  journal={arXiv preprint arXiv:2508:xxxxx},
+  year={2025}
+}
+```
+
+Correspondence and request for materials should be directed to [Hannes Bernien](hannes.bernien@uibk.ac.at).
