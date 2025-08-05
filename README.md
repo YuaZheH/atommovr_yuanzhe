@@ -2,7 +2,7 @@
 
 ## A simulation framework for rearrangement in atomic arrays
 
-by Nikhil Kiran Harle* ([khnikhil](https://github.com/khnikhil/khnikhil)), Bo-Yu Chen* ([phys-mattchen](https://github.com/phys-mattchen)) ([Website](https://phys-mattchen.github.io/)), Bob Bao, and Hannes Bernien.
+by [Nikhil Kiran Harle*](https://github.com/khnikhil/khnikhil), [Bo-Yu Chen*](https://phys-mattchen.github.io/), [Bob Bao](https://www.bobbaothebuilder.com/#), and [Hannes Bernien](https://bernienlab.com).
 
 *These authors contributed equally to this work
 
@@ -13,12 +13,11 @@ by Nikhil Kiran Harle* ([khnikhil](https://github.com/khnikhil/khnikhil)), Bo-Yu
 
 :movie_camera: Visualization of rearrangement process: `atommover.utils.animation.py`
 
-:computer: Experimentally-relevant error modelling: `atommover.utils.ErrorModel.py`
+:computer: Experimentally-relevant error modeling: `atommover.utils.ErrorModel.py`
 
 :chart_with_upwards_trend: Flexible benchmarking suite for running experiments: `atommover.utils.benchmarking.py`
 
 :toolbox: Core utils for moving atoms and simulating stochastic loading: `atommover.utils.core.py` and `atommover.utils.move_utils.py`
-
 
 
 # Use
@@ -58,11 +57,9 @@ We gratefully thank Shraddha Anand, Will Eckner, Noah Glachman, Andy Goldschmidt
 * Nikhil acknowledges support from the National Science Foundation Graduate Research Fellowship (Grant No. DGE-2040434) 
 * Bo-Yu acknowledges support from the UChicago-Taiwan Student Exchange (UCTS) fellowship, National Taiwan University Fu Bell Scholarship, National Taiwan University College of Science Travel Grants and Chuan-Pu Lee Memorial Scholarship.
 
-## Citations
-Please consider citing our paper in your publications if it helps. Here is the bibtex:
-
+## Citation
 ```
-@article{harle2025atommovr,
+@article{HCBB2025atommovr,
   title={atommovr: An open-source simulation framework for rearrangement in atomic arrays},
   author={Nikhil K. Harle and Bo-Yu Chen and Bob Bao and Hannes Bernien},
   journal={arXiv preprint arXiv:2508:02670},
