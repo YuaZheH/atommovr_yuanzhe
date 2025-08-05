@@ -65,7 +65,7 @@ Please consider citing our paper in your publications if it helps. Here is the b
 @article{harle2025atommovr,
   title={atommovr: An open-source simulation framework for rearrangement in atomic arrays},
   author={Nikhil K. Harle and Bo-Yu Chen and Bob Bao and Hannes Bernien},
-  journal={arXiv preprint arXiv:2508:xxxxx},
+  journal={arXiv preprint arXiv:2508:02670},
   year={2025}
 }
 ```
