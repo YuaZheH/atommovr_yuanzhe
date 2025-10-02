@@ -1,7 +1,0 @@
-CC = gcc
-FCC = gfortran
-CFLAGS=-O3 -Wall -Wno-unused-result -Wno-unused-but-set-variable -DMAIN_C
-FFLAGS=-O3
-FLIBDIR = 
-RM = /bin/rm
-

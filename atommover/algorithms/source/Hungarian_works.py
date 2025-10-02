@@ -9,104 +9,104 @@ from atommover.algorithms.Algorithm_class import Algorithm
 from atommover.utils.core import random_loading, generate_middle_fifty, Configurations
 from atommover.utils.move_utils import Move, move_atoms, get_move_list_from_AOD_cmds
 from atommover.algorithms.source.ejection import ejection
-from atommover.algorithms.source.scaling_lower_bound import make_cost_matrix_square
-from atommover.algorithms.source.PPSU_weight_matching import bttl_threshold
+# from atommover.algorithms.source.scaling_lower_bound import make_cost_matrix_square
 
-def parallel_LBAP_algorithm_works(atom_arrays: np.ndarray, target_config: np.ndarray, do_ejection: bool = False, round_lim: int = 15):
-    # Initialize the variables
-    LBAP_success_flag = False
-    complete_flag = False
-    move_set = []
-    matrix = copy.deepcopy(atom_arrays)
-    round_count = 0
 
-    while (complete_flag == False) and (round_count < round_lim):
-        # print(f"Got here_{round_count}")
-        N_independent_moves_path = []
-        # 1. Generate the assignments
-        prepared_assignments = generate_LBAP_assignments(matrix, target_config)
+# def parallel_LBAP_algorithm_works(atom_arrays: np.ndarray, target_config: np.ndarray, do_ejection: bool = False, round_lim: int = 15):
+#     # Initialize the variables
+#     LBAP_success_flag = False
+#     complete_flag = False
+#     move_set = []
+#     matrix = copy.deepcopy(atom_arrays)
+#     round_count = 0
 
-        # 2. Find out N independent paths
-        for start, target in prepared_assignments:
-            single_move_path = generate_path(matrix, start, target)
-            if single_move_path == []:
-                pass
-            # Decompose the single_move_path into independent moves of several obstacle atoms
-            else:
-                N_independent_moves_path.append(single_move_path)
+#     while (complete_flag == False) and (round_count < round_lim):
+#         # print(f"Got here_{round_count}")
+#         N_independent_moves_path = []
+#         # 1. Generate the assignments
+#         prepared_assignments = generate_LBAP_assignments(matrix, target_config)
 
-        # 3. Transform the N_independent_moves_path into a list of moves
-        matrix, Hung_parallel_move_set = transform_paths_into_moves(matrix, N_independent_moves_path)
-        move_set.extend(Hung_parallel_move_set)
+#         # 2. Find out N independent paths
+#         for start, target in prepared_assignments:
+#             single_move_path = generate_path(matrix, start, target)
+#             if single_move_path == []:
+#                 pass
+#             # Decompose the single_move_path into independent moves of several obstacle atoms
+#             else:
+#                 N_independent_moves_path.append(single_move_path)
 
-        # effective_config = np.multiply(matrix, target_config)
-        if Algorithm.get_success_flag(matrix, target_config, do_ejection=do_ejection, n_species = 1):
-            complete_flag = True
-            LBAP_success_flag = True
-        round_count += 1
+#         # 3. Transform the N_independent_moves_path into a list of moves
+#         matrix, Hung_parallel_move_set = transform_paths_into_moves(matrix, N_independent_moves_path)
+#         move_set.extend(Hung_parallel_move_set)
 
-    # 4. Eject to certain geoemetry
-    if do_ejection:
-        eject_moves, eject_config = ejection(matrix, target_config, [0, len(matrix) - 1, 0, len(matrix[0]) - 1])
-        move_set.extend(eject_moves)
-    else:
-        eject_config = matrix
+#         # effective_config = np.multiply(matrix, target_config)
+#         if Algorithm.get_success_flag(matrix, target_config, do_ejection=do_ejection, n_species = 1):
+#             complete_flag = True
+#             LBAP_success_flag = True
+#         round_count += 1
 
-    return eject_config, move_set, LBAP_success_flag
+#     # 4. Eject to certain geoemetry
+#     if do_ejection:
+#         eject_moves, eject_config = ejection(matrix, target_config, [0, len(matrix) - 1, 0, len(matrix[0]) - 1])
+#         move_set.extend(eject_moves)
+#     else:
+#         eject_config = matrix
 
-def generate_LBAP_assignments(matrix, target_config):
+#     return eject_config, move_set, LBAP_success_flag
+
+# def generate_LBAP_assignments(matrix, target_config):
     
-    #Define target positions for the center square in a matrix.
-    current_positions, target_positions = define_current_and_target(matrix, target_config)
+#     #Define target positions for the center square in a matrix.
+#     current_positions, target_positions = define_current_and_target(matrix, target_config)
 
-    # Generate the cost matrix using the current atom positions and the target positions
-    cost_matrix = generate_cost_matrix(current_positions, target_positions)
+#     # Generate the cost matrix using the current atom positions and the target positions
+#     cost_matrix = generate_cost_matrix(current_positions, target_positions)
 
-    sq_cost = make_cost_matrix_square(cost_matrix)
+#     sq_cost = make_cost_matrix_square(cost_matrix)
 
 
-    max_val = np.max(sq_cost)
-    reverse_cost_mat = np.zeros_like(sq_cost)
-    for i in range(len(reverse_cost_mat)):
-        for j in range(len(reverse_cost_mat[0])):
-            reverse_cost_mat[i,j] = max_val + 1 - sq_cost[i,j]
+#     max_val = np.max(sq_cost)
+#     reverse_cost_mat = np.zeros_like(sq_cost)
+#     for i in range(len(reverse_cost_mat)):
+#         for j in range(len(reverse_cost_mat[0])):
+#             reverse_cost_mat[i,j] = max_val + 1 - sq_cost[i,j]
 
-    sparsemat = csr_matrix(reverse_cost_mat)
-    result_dict = bttl_threshold(sparsemat.indptr, 
-                                    sparsemat.indices, 
-                                    sparsemat.data,
-                                    sparsemat.shape[0],
-                                    sparsemat.shape[1])
-    col_inds = result_dict['match']
-    col_ind = []
-    row_ind = []
-    for c_ind in range(len(col_inds)):
-        col = col_inds[c_ind]
-        row = c_ind
-        try:
-            cost_matrix[row, col]
-            col_ind.append(col)
-            row_ind.append(row)
-        except IndexError:
-            pass
-    # costs = []
-    # for row_ind in range(len(sq_cost)):
-    #     col_ind = col_inds[row_ind]
-    #     costs.append(sq_cost[row_ind, col_ind])
+#     sparsemat = csr_matrix(reverse_cost_mat)
+#     result_dict = bttl_threshold(sparsemat.indptr, 
+#                                     sparsemat.indices, 
+#                                     sparsemat.data,
+#                                     sparsemat.shape[0],
+#                                     sparsemat.shape[1])
+#     col_inds = result_dict['match']
+#     col_ind = []
+#     row_ind = []
+#     for c_ind in range(len(col_inds)):
+#         col = col_inds[c_ind]
+#         row = c_ind
+#         try:
+#             cost_matrix[row, col]
+#             col_ind.append(col)
+#             row_ind.append(row)
+#         except IndexError:
+#             pass
+#     # costs = []
+#     # for row_ind in range(len(sq_cost)):
+#     #     col_ind = col_inds[row_ind]
+#     #     costs.append(sq_cost[row_ind, col_ind])
 
-    # Pair up row_ind and col_ind and sort by col_ind
-    paired_indices = sorted(zip(row_ind, col_ind), key=lambda x: x[1])
+#     # Pair up row_ind and col_ind and sort by col_ind
+#     paired_indices = sorted(zip(row_ind, col_ind), key=lambda x: x[1])
 
-    if paired_indices:
-        # Unzip the sorted pairs if paired_indices is not empty
-        sorted_row_ind, sorted_col_ind = zip(*paired_indices)
-    else:
-        # Assign default values if paired_indices is empty
-        sorted_row_ind, sorted_col_ind = [], []
+#     if paired_indices:
+#         # Unzip the sorted pairs if paired_indices is not empty
+#         sorted_row_ind, sorted_col_ind = zip(*paired_indices)
+#     else:
+#         # Assign default values if paired_indices is empty
+#         sorted_row_ind, sorted_col_ind = [], []
 
-    prepared_assignments = [(current_positions[i], target_positions[j]) for i, j in zip(sorted_row_ind, sorted_col_ind)]
+#     prepared_assignments = [(current_positions[i], target_positions[j]) for i, j in zip(sorted_row_ind, sorted_col_ind)]
 
-    return prepared_assignments
+#     return prepared_assignments
 
 def Hungarian_algorithm_works(atom_arrays: np.ndarray, target_config: np.ndarray, do_ejection: bool = False, final_size: list = []):
     move_set = []

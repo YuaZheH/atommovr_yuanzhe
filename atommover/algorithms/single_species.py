@@ -13,7 +13,9 @@ from atommover.algorithms.Algorithm_class import Algorithm
 from atommover.algorithms.source.balance_compact import balance_and_compact
 from atommover.algorithms.source.bc_new import bcv2
 from atommover.algorithms.source.generalized_balance import generalized_balance
-from atommover.algorithms.source.Hungarian_works import parallel_Hungarian_algorithm_works, parallel_LBAP_algorithm_works, Hungarian_algorithm_works
+# from atommover.algorithms.source.Hungarian_works import parallel_Hungarian_algorithm_works, parallel_LBAP_algorithm_works, Hungarian_algorithm_works
+from atommover.algorithms.source.Hungarian_works import parallel_Hungarian_algorithm_works, Hungarian_algorithm_works
+
 
 ##########################
 # Bernien Lab algorithms #
@@ -35,20 +37,20 @@ class ParallelHungarian(Algorithm):
             round_lim = int(np.sum(atom_array.target))
         return parallel_Hungarian_algorithm_works(atom_array.matrix, atom_array.target, do_ejection, final_size, round_lim)
 
-class ParallelLBAP(Algorithm):
-    """ Solves the linear bottleneck assignment problem and parallelizes the moves.
-        Code taken from ParallelHungarian.
+# class ParallelLBAP(Algorithm):
+#     """ Solves the linear bottleneck assignment problem and parallelizes the moves.
+#         Code taken from ParallelHungarian.
         
-        Supported configurations: all. """
-    def __repr__(self):
-        return 'Parallel LBAP'
+#         Supported configurations: all. """
+#     def __repr__(self):
+#         return 'Parallel LBAP'
     
-    def get_moves(self, atom_array: AtomArray, do_ejection: bool = False, final_size: list = [], round_lim: int = 0):
-        if atom_array.n_species != 1:
-            raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
-        if round_lim == 0:
-            round_lim = int(np.sum(atom_array.target))
-        return parallel_LBAP_algorithm_works(atom_array.matrix, atom_array.target, do_ejection, round_lim)
+#     def get_moves(self, atom_array: AtomArray, do_ejection: bool = False, final_size: list = [], round_lim: int = 0):
+#         if atom_array.n_species != 1:
+#             raise ValueError(f"Single-species algorithm cannot process atom array with {atom_array.n_species} species.")
+#         if round_lim == 0:
+#             round_lim = int(np.sum(atom_array.target))
+#         return parallel_LBAP_algorithm_works(atom_array.matrix, atom_array.target, do_ejection, round_lim)
 
 # Generalized Balance
 class GeneralizedBalance(Algorithm):
