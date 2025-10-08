@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import time
 from collections import deque
 from scipy.optimize import linear_sum_assignment
 from scipy.sparse import csr_matrix
@@ -115,17 +116,17 @@ def Hungarian_algorithm_works(atom_arrays: np.ndarray, target_config: np.ndarray
     if len(final_size) == 0:
         final_size = [0, len(matrix[0])-1, 0, len(matrix)-1]
 
-    #Define target positions for the center square in a matrix.
-    current_positions, target_positions = define_current_and_target(matrix, target_config)
-
-    # Generate the cost matrix using the current atom positions and the target positions
-    cost_matrix = generate_cost_matrix(current_positions, target_positions)
-
-    # row_ind and col_ind are arrays of indices indicating the optimal assignment
-    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-    # Pair up row_ind and col_ind and sort by col_ind
-    paired_indices = sorted(zip(row_ind, col_ind), key=lambda x: x[1])
+    time_1 = time.time()
+    current_positions, target_positions = define_current_and_target(matrix, target_config)    #Define target positions for the center square in a matrix.
+    time_2 = time.time()
+    print(f"Defining current and target positions took {time_2 - time_1} seconds.")   
+    cost_matrix = generate_cost_matrix_scipy(current_positions, target_positions)    # Generate the cost matrix using the current atom positions and the target positions
+    time_3 = time.time()
+    print(f"Generating cost matrix took {time_3 - time_2} seconds.")
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)    # row_ind and col_ind are arrays of indices indicating the optimal assignment
+    time_4 = time.time()
+    print(f"Solving linear sum assignment took {time_4 - time_3} seconds.")                     
+    paired_indices = sorted(zip(row_ind, col_ind), key=lambda x: x[1])    # Pair up row_ind and col_ind and sort by col_ind
 
     if paired_indices:
         # Unzip the sorted pairs if paired_indices is not empty
@@ -148,7 +149,8 @@ def Hungarian_algorithm_works(atom_arrays: np.ndarray, target_config: np.ndarray
         eject_config = copy.deepcopy(matrix)
 
     success_flag = Algorithm.get_success_flag(eject_config.reshape(np.shape(target_config)), target_config, do_ejection=do_ejection, n_species = 1)
-
+    time_5 = time.time()    
+    print(f"returning the results took {time_5 - time_4} seconds.")        
     return eject_config, move_set, success_flag
 
 def parallel_Hungarian_algorithm_works(atom_arrays: np.ndarray, target_config: np.ndarray, do_ejection: bool = False, final_size: list = [], round_lim: int = 15):
@@ -249,6 +251,15 @@ def generate_cost_matrix(current_positions, target_positions):
         for j, target in enumerate(target_positions):
             cost_matrix[i, j] = np.sqrt((current[0] - target[0])**2 + (current[1] - target[1])**2)
     return cost_matrix
+
+def generate_cost_matrix_scipy(current_positions, target_positions):
+    # current_positions, target_positions: sequence of (x,y) pairs
+    if len(current_positions) == 0 or len(target_positions) == 0:
+        return np.zeros((len(current_positions), len(target_positions)))
+    A = np.asarray(current_positions, dtype=float)
+    B = np.asarray(target_positions, dtype=float)
+    from scipy.spatial.distance import cdist
+    return cdist(A, B, metric='euclidean')
 
 ##Move the atom from start to end according to Hungarian assignment
 def move_atom_and_show_grid(grid, start, end):
